@@ -1,0 +1,52 @@
+version: '3.9'
+
+services: 
+  db:
+    image: mysql/mysql-server:latest
+    container_name: my-mysql
+    restart: always
+    environment:
+      - MYSQL_DATABASE=mysql
+      - MYSQL_ROOT_PASSWORD=mysql
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql-volume:/var/lib/mysql
+    networks: 
+      - node-network
+  
+  back-end:
+    build: 
+      context: back-end
+    container_name: back-end
+    working_dir: /usr/src/app
+    networks: 
+      - node-network
+    volumes: 
+      - ./back-end:/usr/src/app
+      - /usr/src/app/node_modules
+    tty: true
+    ports: 
+      - "3000:3000"
+    depends_on:
+      - db
+
+  front-end:
+    build: ./front-end
+    container_name: front-end
+    ports: 
+      - "5173:5173"
+    stdin_open: true
+    tty: true
+    volumes: 
+      - ./front-end:/front-end
+    networks: 
+      - node-network
+
+volumes:
+  mysql-volume:
+    driver: local
+
+networks: 
+  node-network:
+    driver: bridge
